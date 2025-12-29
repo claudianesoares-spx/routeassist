@@ -28,17 +28,20 @@ st.markdown(
 )
 
 # ---------------- CARREGAR BASE ----------------
+# ---------------- CARREGAR BASE ----------------
 try:
-    
     url = "https://docs.google.com/spreadsheets/d/1WiOCZsbHzIODwnP8Io3c8rPFCy1YI5t9SqguiWn3krw/export?format=xlsx"
-df = pd.read_excel(url)
+    df = pd.read_excel(url)
+
+    df.columns = df.columns.str.strip().str.lower()
 
     # normalizar coluna nome
     df["nome_normalizado"] = df["nome"].apply(normalizar_texto)
 
 except Exception as e:
-    st.error("❌ Erro ao carregar o arquivo rotas.xlsx")
+    st.error("❌ Erro ao carregar a base no Google Drive")
     st.stop()
+
 
 # ---------------- BUSCA ----------------
 st.markdown("### 🔎 Buscar rota")
@@ -62,6 +65,7 @@ if nome:
         """)
     else:
         st.warning("⚠️ Nenhuma rota encontrada para este nome")
+
 
 
 
