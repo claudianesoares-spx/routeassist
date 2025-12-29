@@ -34,22 +34,17 @@ st.title("SPX | Consulta de Rotas")
 SHEET_ID = "1x4P8sHQ8cdn7tJCDRjPP8qm4aFIKJ1tx"  # seu ID aqui
 
 try:
-    df = carregar_planilha_gdrive(SHEET_ID)
-    df.columns = df.columns.str.strip().str.lower()
+    url = "https://docs.google.com/spreadsheets/d/1x4P8sHQ8cdn7tJCDRjPP8qm4aFIKJ1tx/export?format=xlsx"
+    df = pd.read_excel(url)
 
-    if "nome" not in df.columns:
-        st.error("❌ A coluna 'nome' não foi encontrada na planilha.")
-        st.stop()
+    df.columns = df.columns.str.strip().str.lower()
 
     df["nome_normalizado"] = df["nome"].apply(normalizar_texto)
 
-    st.markdown(
-        f"📅 Base carregada com sucesso! Última atualização em: **{datetime.now().strftime('%d/%m/%Y %H:%M')}**"
-    )
-
-except Exception as erro:
-    st.error(f"❌ Não foi possível carregar a planilha:\n{erro}")
+except Exception as e:
+    st.error(f"❌ Erro ao carregar a base: {e}")
     st.stop()
+
 
 # ---------------- BUSCA ----------------
 st.markdown("### 🔎 Buscar rota")
@@ -67,3 +62,4 @@ if nome_input:
         st.markdown(f"**🚚 Rota:** {rota}  \n**📍 Bairro:** {bairro}")
     else:
         st.warning("⚠️ Nenhuma rota encontrada para esse nome")
+
