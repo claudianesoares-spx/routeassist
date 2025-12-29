@@ -12,63 +12,58 @@ st.set_page_config(
 
 # ---------------- FUNÇÕES ----------------
 def normalizar_texto(texto):
-    """Normaliza o texto para busca (lowercase, sem acentos, sem espaços extras)"""
     if not isinstance(texto, str):
         return ""
     texto = texto.strip().lower()
     texto = unicodedata.normalize("NFKD", texto)
     texto = texto.encode("ascii", "ignore").decode("utf-8")
-    texto = re.sub(r"\s+", " ", texto)
-    return texto
+    return re.sub(r"\s+", " ", texto)
+
+def carregar_planilha_gdrive(sheet_id: str):
+    """
+    Monta o link de exportação .xlsx do Google Sheets
+    e tenta carregar como DataFrame.
+    """
+    base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
+    return pd.read_excel(base_url)
 
 # ---------------- TÍTULO ----------------
 st.title("SPX | Consulta de Rotas")
-st.markdown(f"📅 Base atualizada em: **{datetime.now().strftime('%d/%m/%Y %H:%M')}**")
 
-# ---------------- CARREGAR BASE ----------------
+# ---------------- CARREGA DADOS ----------------
+SHEET_ID = "1x4P8sHQ8cdn7tJCDRjPP8qm4aFIKJ1tx"  # seu ID aqui
+
 try:
-    # URL da planilha no Google Drive (export como XLSX)
-    url = "https://docs.google.com/spreadsheets/d/1WiOCZsbHzIODwnP8Io3c8rPFCy1YI5t9SqguiWn3krw/export?format=xlsx"
-    df = pd.read_excel(url)
-
-    # Normaliza nomes das colunas
+    df = carregar_planilha_gdrive(SHEET_ID)
     df.columns = df.columns.str.strip().str.lower()
 
-    # Verifica se a coluna 'nome' existe
     if "nome" not in df.columns:
         st.error("❌ A coluna 'nome' não foi encontrada na planilha.")
         st.stop()
 
-    # Cria coluna normalizada para busca
     df["nome_normalizado"] = df["nome"].apply(normalizar_texto)
 
-except Exception as e:
-    st.error(f"❌ Erro ao carregar a base: {e}")
+    st.markdown(
+        f"📅 Base carregada com sucesso! Última atualização em: **{datetime.now().strftime('%d/%m/%Y %H:%M')}**"
+    )
+
+except Exception as erro:
+    st.error(f"❌ Não foi possível carregar a planilha:\n{erro}")
     st.stop()
 
 # ---------------- BUSCA ----------------
 st.markdown("### 🔎 Buscar rota")
-nome = st.text_input("Nome completo do motorista")
+nome_input = st.text_input("Nome completo do motorista")
 
-if nome:
-    nome_busca = normalizar_texto(nome)
+if nome_input:
+    nome_busca = normalizar_texto(nome_input)
     resultado = df[df["nome_normalizado"].str.contains(nome_busca, na=False)]
 
     if not resultado.empty:
-        # Pega o primeiro resultado encontrado
-        rota = resultado.iloc[0]["rota"] if "rota" in df.columns else "Não disponível"
-        bairro = resultado.iloc[0]["bairro"] if "bairro" in df.columns else "Não disponível"
+        rota = resultado.iloc[0].get("rota", "Não disponível")
+        bairro = resultado.iloc[0].get("bairro", "Não disponível")
 
         st.success("✅ Motorista encontrado")
-        st.markdown(f"""
-        **🚚 Rota:** {rota}  
-        **📍 Bairro:** {bairro}
-        """)
+        st.markdown(f"**🚚 Rota:** {rota}  \n**📍 Bairro:** {bairro}")
     else:
-        st.warning("⚠️ Nenhuma rota encontrada para este nome")
-
-
-
-
-
-
+        st.warning("⚠️ Nenhuma rota encontrada para esse nome")
