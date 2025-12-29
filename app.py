@@ -30,7 +30,7 @@ st.markdown(
 # ---------------- CARREGAR BASE ----------------
 try:
     
-url = "https://docs.google.com/spreadsheets/d/1WiOCZsbHzIODwnP8Io3c8rPFCy1YI5t9SqguiWn3krw/export?format=xlsx"
+    url = "https://docs.google.com/spreadsheets/d/1WiOCZsbHzIODwnP8Io3c8rPFCy1YI5t9SqguiWn3krw/export?format=xlsx"
 df = pd.read_excel(url)
 
     # normalizar coluna nome
@@ -62,6 +62,7 @@ if nome:
         """)
     else:
         st.warning("⚠️ Nenhuma rota encontrada para este nome")
+
 
 
 
