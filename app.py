@@ -29,8 +29,9 @@ st.markdown(
 
 # ---------------- CARREGAR BASE ----------------
 try:
-    df = pd.read_excel("rotas.xlsx")
-    df.columns = df.columns.str.strip().str.lower()
+    
+url = "https://docs.google.com/spreadsheets/d/1WiOCZsbHzIODwnP8Io3c8rPFCy1YI5t9SqguiWn3krw/export?format=xlsx"
+df = pd.read_excel(url)
 
     # normalizar coluna nome
     df["nome_normalizado"] = df["nome"].apply(normalizar_texto)
@@ -61,6 +62,7 @@ if nome:
         """)
     else:
         st.warning("⚠️ Nenhuma rota encontrada para este nome")
+
 
 
 
