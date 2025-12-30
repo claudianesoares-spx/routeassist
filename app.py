@@ -19,11 +19,11 @@ def normalizar_texto(texto):
     texto = texto.encode("ascii", "ignore").decode("utf-8")
     return re.sub(r"\s+", " ", texto)
 
-# ---------------- CARREGAR PLANILHA ----------------
+# ---------------- CARREGAR BASE PRINCIPAL ----------------
 @st.cache_data(ttl=300)
 def carregar_planilha():
     url = "https://docs.google.com/spreadsheets/d/1x4P8sHQ8cdn7tJCDRjPP8qm4aFIKJ1tx/export?format=xlsx"
-    df = pd.read_excel(url)
+    df = pd.read_excel(url, sheet_name="CONSULTA ROTAS")
     df.columns = df.columns.str.strip().str.lower()
 
     if "nome" not in df.columns:
@@ -33,11 +33,22 @@ def carregar_planilha():
     df["nome_normalizado"] = df["nome"].apply(normalizar_texto)
     return df
 
-# ---------------- CONTROLE DE ACESSO ----------------
+# ---------------- CONTROLE DE STATUS ----------------
+@st.cache_data(ttl=60)
+def verificar_status():
+    url = "https://docs.google.com/spreadsheets/d/1x4P8sHQ8cdn7tJCDRjPP8qm4aFIKJ1tx/export?format=xlsx"
+    df = pd.read_excel(url, sheet_name="controle")
+    df.columns = df.columns.str.lower()
+
+    if "status_consulta" not in df.columns:
+        return "fechado"
+
+    return str(df.loc[0, "status_consulta"]).strip().lower()
+
+# ---------------- ÁREA ADMIN ----------------
 st.sidebar.title("🔐 Área Administrativa")
 
 senha = st.sidebar.text_input("Senha ADMIN", type="password")
-
 admin = senha == "LPA2026"
 
 if admin:
@@ -47,21 +58,10 @@ if admin:
         st.cache_data.clear()
         st.rerun()
 
-# ---------------- STATUS DA CONSULTA (PLANILHA) ----------------
-@st.cache_data(ttl=60)
-def verificar_status():
-    url_status = "https://docs.google.com/spreadsheets/d/1x4P8sHQ8cdn7tJCDRjPP8qm4aFIKJ1tx/export?format=xlsx"
-    df_status = pd.read_excel(url_status, sheet_name=0)
-    df_status.columns = df_status.columns.str.lower()
+# ---------------- BLOQUEIO DE ACESSO ----------------
+status = verificar_status()
 
-    if "status_consulta" in df_status.columns:
-        return str(df_status.loc[0, "status_consulta"]).lower()
-    return "fechado"
-
-status_consulta = verificar_status()
-
-# ---------------- BLOQUEIO PARA DRIVERS ----------------
-if status_consulta != "aberto" and not admin:
+if status != "aberto" and not admin:
     st.title("🚧 Consulta temporariamente indisponível")
     st.info(
         "As rotas ainda estão em processamento.\n\n"
@@ -69,7 +69,7 @@ if status_consulta != "aberto" and not admin:
     )
     st.stop()
 
-# ---------------- CARREGA BASE ----------------
+# ---------------- CARREGAMENTO DA BASE ----------------
 df = carregar_planilha()
 
 st.markdown(
@@ -93,7 +93,7 @@ if nome_input:
     else:
         st.success(f"✅ {len(resultado)} rota(s) encontrada(s)")
 
-        for i, row in resultado.iterrows():
+        for _, row in resultado.iterrows():
             rota = row.get("rota", "Não disponível")
             bairro = row.get("bairro", "Não disponível")
             placa = row.get("placa", "—")
