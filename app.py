@@ -10,6 +10,55 @@ st.set_page_config(
     layout="centered"
 )
 
+# ---------------- ESTILO GLOBAL | SHOPEE ----------------
+st.markdown(
+    """
+    <style>
+    h1, h2, h3 {
+        color: #EE4D2D !important;
+        font-family: Arial, sans-serif;
+        font-weight: 700;
+    }
+
+    h4, h5, h6 {
+        color: #E65100 !important;
+        font-family: Arial, sans-serif;
+    }
+
+    div.stButton > button {
+        background-color: #EE4D2D;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.45em 1em;
+        font-weight: 600;
+        font-family: Arial, sans-serif;
+    }
+
+    div.stButton > button:hover {
+        background-color: #D84315;
+        color: white;
+    }
+
+    input {
+        border: 1px solid #EE4D2D !important;
+        border-radius: 6px !important;
+    }
+
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3 {
+        color: #EE4D2D !important;
+    }
+
+    div[data-testid="stSuccess"] {
+        border-left: 6px solid #EE4D2D;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # ---------------- FUNÇÕES ----------------
 def normalizar_texto(texto):
     if not isinstance(texto, str):
@@ -58,9 +107,46 @@ if admin:
         st.cache_data.clear()
         st.rerun()
 
-# ---------------- BLOQUEIO DE ACESSO ----------------
+# ---------------- STATUS ----------------
 status = verificar_status()
 
+# ---------------- INDICADOR VISUAL | SPX / SHOPEE ----------------
+if status == "aberto":
+    st.markdown(
+        """
+        <div style="
+            background-color:#FFF3E0;
+            border-left:8px solid #FB8C00;
+            padding:14px 16px;
+            border-radius:8px;
+            margin-bottom:18px;
+            font-family: Arial, sans-serif;
+        ">
+            🟠 <strong style="color:#E65100;">Consulta ABERTA</strong><br>
+            <span style="color:#5D4037;">Rotas liberadas para consulta.</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+else:
+    st.markdown(
+        """
+        <div style="
+            background-color:#FDECEA;
+            border-left:8px solid #D32F2F;
+            padding:14px 16px;
+            border-radius:8px;
+            margin-bottom:18px;
+            font-family: Arial, sans-serif;
+        ">
+            🔴 <strong style="color:#B71C1C;">Consulta FECHADA</strong><br>
+            <span style="color:#5F2120;">Aguardando liberação oficial das rotas.</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+# ---------------- BLOQUEIO PARA DRIVERS ----------------
 if status != "aberto" and not admin:
     st.title("🚧 Consulta temporariamente indisponível")
     st.info(
