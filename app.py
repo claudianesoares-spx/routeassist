@@ -20,6 +20,11 @@ def normalizar_texto(texto):
     texto = texto.encode("ascii", "ignore").decode("utf-8")
     return re.sub(r"\s+", " ", texto)
 
+# ---------------- BOTÃO PARA ATUALIZAR DADOS ----------------
+if st.button("🔄 Atualizar dados agora"):
+    st.cache_data.clear()
+    st.success("Cache limpo! Os dados serão recarregados na próxima execução.")
+
 # ---------------- CARREGAR PLANILHA ----------------
 @st.cache_data(ttl=300)
 def carregar_planilha():
@@ -60,8 +65,11 @@ nome_input = st.text_input("Nome completo do motorista")
 if nome_input:
     nome_busca = normalizar_texto(nome_input)
 
-    pattern = re.compile(nome_busca)
-    resultado = df[df["nome_normalizado"].str.contains(pattern, na=False)]
+    # usa contains simples, sem regex complexo, para garantir todas as ocorrências
+    resultado = df[df["nome_normalizado"].str.contains(nome_busca, na=False)]
+
+    # DEBUG: mostra todas as linhas encontradas (pode comentar depois)
+    # st.write(resultado)
 
     if not resultado.empty:
         qtd = len(resultado)
@@ -81,4 +89,3 @@ if nome_input:
 
     else:
         st.warning("⚠️ Nenhuma rota encontrada para esse nome")
-
