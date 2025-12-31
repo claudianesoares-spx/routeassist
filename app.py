@@ -9,44 +9,63 @@ st.set_page_config(
 )
 
 st.title("🚚 SPX | Consulta de Rotas")
-st.markdown("Consulta disponível **somente após a alocação das rotas**.")
 
-# ---------------- CARREGAMENTO DA BASE ----------------
-@st.cache_data
-def carregar_base():
-    url = "COLE_AQUI_O_LINK_DE_EXPORTAÇÃO_XLSX_DA_PLANILHA"
-    df = pd.read_excel(url)
+# ---------------- LINK DA PLANILHA ----------------
+url = "https://docs.google.com/spreadsheets/d/1x4P8sHQ8cdn7tJCDRjPP8qm4aFIKJ1tx/export?format=xlsx"
 
-    # Remove espaços extras dos nomes das colunas
+# ---------------- FUNÇÃO DE LEITURA ----------------
+@st.cache_data(ttl=300)
+def carregar_dados():
+    # Lê a aba correta
+    df = pd.read_excel(
+        url,
+        sheet_name="BASE IMPORTAÇÃO",
+        dtype=str
+    )
+
+    # Padroniza nomes das colunas
     df.columns = df.columns.str.strip()
 
     return df
 
+# ---------------- CARREGAR DADOS ----------------
 try:
-    df = carregar_base()
+    df = carregar_dados()
 except Exception as e:
     st.error("Erro ao carregar a base de dados.")
     st.stop()
 
-# ---------------- CAMPO DE BUSCA ----------------
-nome_busca = st.text_input(
-    "Digite o **nome completo** para consulta:",
-    placeholder="Ex: JOÃO DA SILVA"
-).upper().strip()
+# ---------------- CONFERÊNCIA DAS COLUNAS ----------------
+colunas_necessarias = ["Placa", "Nome", "Bairro", "Rota", "Cidade"]
 
-# ---------------- RESULTADO ----------------
+for col in colunas_necessarias:
+    if col not in df.columns:
+        st.error(f"Coluna obrigatória não encontrada: {col}")
+        st.stop()
+
+# ---------------- FILTRO ----------------
+nome_busca = st.text_input(
+    "Digite o nome completo ou parcial do motorista:",
+    placeholder="Ex: Adriana Cardoso"
+)
+
 if nome_busca:
-    resultado = df[df["Nome"].str.upper() == nome_busca]
+    resultado = df[df["Nome"].str.contains(nome_busca, case=False, na=False)]
 
     if resultado.empty:
-        st.warning("❌ Nenhuma rota atribuída para este motorista.")
+        st.warning("Nenhuma rota encontrada para este nome.")
     else:
-        dados = resultado.iloc[0]
+        st.success(f"{len(resultado)} rota(s) encontrada(s):")
 
-        st.success("✅ Rota encontrada!")
-        st.markdown("---")
-        st.write(f"**Nome:** {dados['Nome']}")
-        st.write(f"**Placa:** {dados['Placa']}")
-        st.write(f"**Cidade:** {dados['Cidade']}")
-        st.write(f"**Bairro:** {dados['Bairro']}")
-        st.write(f"**Rota:** {dados['Rota']}")
+        st.dataframe(
+            resultado[[
+                "Placa",
+                "Nome",
+                "Bairro",
+                "Rota",
+                "Cidade"   # 👈 GARANTIDO AQUI
+            ]],
+            use_container_width=True
+        )
+else:
+    st.info("Digite um nome para consultar a rota.")
