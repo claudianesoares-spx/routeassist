@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import json
+import os
 
 # ---------------- CONFIGURAÇÃO DA PÁGINA ----------------
 st.set_page_config(
@@ -68,22 +70,23 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- URL DA PLANILHA (ATUALIZADA) ----------------
+# ---------------- CONFIGURAÇÕES ----------------
 URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1F8HC2D8UxRc5R_QBdd-zWu7y6Twqyk3r0NTPN0HCWUI/export?format=xlsx"
 SENHA_ADMIN = "LPA2026"
+ARQUIVO_STATUS = "status_site.json"
 
-# ---------------- CONTROLE (ABERTO / FECHADO) ----------------
-@st.cache_data(ttl=300)
-def carregar_controle():
-    df_controle = pd.read_excel(URL_PLANILHA, sheet_name="controle")
-    df_controle.columns = df_controle.columns.str.strip().str.lower()
+# ---------------- STATUS PERSISTENTE ----------------
+def carregar_status():
+    if not os.path.exists(ARQUIVO_STATUS):
+        salvar_status("ABERTO")
+    with open(ARQUIVO_STATUS, "r") as f:
+        return json.load(f)["status"]
 
-    if "status_consulta" not in df_controle.columns:
-        return "ABERTO"
+def salvar_status(status):
+    with open(ARQUIVO_STATUS, "w") as f:
+        json.dump({"status": status}, f)
 
-    return str(df_controle.iloc[0]["status_consulta"]).strip().upper()
-
-status_site = carregar_controle()
+status_site = carregar_status()
 
 # ---------------- BASE PRINCIPAL + TIMESTAMP ----------------
 @st.cache_data(ttl=300)
@@ -96,7 +99,7 @@ def carregar_base():
 
 df, ultima_atualizacao = carregar_base()
 
-# ---------------- SIDEBAR ADMIN (SEMPRE VISÍVEL) ----------------
+# ---------------- SIDEBAR ADMIN ----------------
 with st.sidebar:
     st.markdown("## 🔒 Área Administrativa")
     st.markdown("---")
@@ -109,10 +112,19 @@ with st.sidebar:
         st.markdown(f"**🚦 Status da consulta:** `{status_site}`")
         st.markdown(f"**🕒 Última atualização:** `{ultima_atualizacao}`")
 
-        if st.button("🔁 Atualizar agora"):
-            st.cache_data.clear()
-            st.success("Atualizando base…")
-            st.rerun()
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("🟢 Abrir consulta"):
+                salvar_status("ABERTO")
+                st.success("Consulta ABERTA")
+                st.rerun()
+
+        with col2:
+            if st.button("🔴 Fechar consulta"):
+                salvar_status("FECHADO")
+                st.warning("Consulta FECHADA")
+                st.rerun()
 
         st.markdown("---")
         st.markdown("📊 **Base completa**")
