@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import os
 import time
@@ -48,6 +48,18 @@ def registrar_log(acao, nivel):
         pd.DataFrame([linha]).to_csv(LOG_FILE, mode="a", header=False, index=False)
 
 config = carregar_config()
+
+# ---------------- LIMPEZA AUTOMÁTICA DE LOGS (3 DIAS) ----------------
+def limpar_logs_3_dias():
+    if not os.path.exists(LOG_FILE):
+        return
+    df = pd.read_csv(LOG_FILE)
+    df['Data'] = pd.to_datetime(df['Data'], format="%d/%m/%Y")
+    limite = datetime.now() - timedelta(days=3)
+    df_limpo = df[df['Data'] >= limite]
+    df_limpo.to_csv(LOG_FILE, index=False)
+
+limpar_logs_3_dias()
 
 # ---------------- ESTILO (INALTERADO) ----------------
 st.markdown("""
