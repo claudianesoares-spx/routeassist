@@ -16,7 +16,7 @@ URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1F8HC2D8UxRc5R_QBdd-zWu7y
 if "status_site" not in st.session_state:
     st.session_state.status_site = "FECHADO"
 
-# ================== SIDEBAR (ADMIN DISCRETO) ==================
+# ================== SIDEBAR ADMIN ==================
 with st.sidebar:
     st.markdown("## 🔐 Administração")
 
@@ -63,11 +63,15 @@ def carregar_base():
 
 try:
     df = carregar_base()
-except Exception as e:
+except Exception:
     st.error("Erro ao carregar a base de dados.")
     st.stop()
 
 # ================== CONSULTA ==================
+st.markdown("### 🔍 Consulta de Rotas")
+
+nome = st.text_input("Digite o nome completo ou parcial do motorista")
+
 if nome:
     resultado = df[df["Nome"].str.contains(nome, case=False, na=False)]
 
@@ -93,5 +97,3 @@ if nome:
                 📍 <strong>Bairro:</strong> {r['Bairro']}
             </div>
             """, unsafe_allow_html=True)
-
-
