@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import datetime, timedelta
 import json
 import os
-import time
 
 # ---------------- CONFIGURAÇÃO DA PÁGINA ----------------
 st.set_page_config(
@@ -19,16 +18,22 @@ LOG_FILE = "logs.csv"
 # ---------------- CONFIG INICIAL ----------------
 def carregar_config():
     if not os.path.exists(CONFIG_FILE):
+        # Cria config vazio, sem senhas hardcoded
         config = {
-            "senha_master": "MASTER2026",
-            "senha_operacional": "LPA2026",
+            "senha_master": "",
+            "senha_operacional": "",
             "status_site": "ABERTO"
         }
         with open(CONFIG_FILE, "w") as f:
             json.dump(config, f)
+        st.warning("Configuração inicial criada! Defina as senhas Master e Operacional no app.")
     else:
         with open(CONFIG_FILE, "r") as f:
             config = json.load(f)
+        # Se senhas não existirem, inicializa vazio
+        config.setdefault("senha_master", "")
+        config.setdefault("senha_operacional", "")
+        config.setdefault("status_site", "ABERTO")
     return config
 
 def salvar_config(config):
@@ -57,7 +62,6 @@ def limpar_logs_3_dias():
         df = pd.read_csv(LOG_FILE)
         if df.empty or 'Data' not in df.columns:
             return
-        # Converte Data, ignorando valores inválidos
         df['Data'] = pd.to_datetime(df['Data'], format="%d/%m/%Y", errors='coerce')
         df = df.dropna(subset=['Data'])
         limite = datetime.now() - timedelta(days=3)
@@ -129,9 +133,9 @@ with st.sidebar:
 
     nivel = None
 
-    if senha == config["senha_master"]:
+    if senha == config["senha_master"] and config["senha_master"]:
         nivel = "MASTER"
-    elif senha == config["senha_operacional"]:
+    elif senha == config["senha_operacional"] and config["senha_operacional"]:
         nivel = "OPERACIONAL"
 
     if nivel:
@@ -143,12 +147,12 @@ with st.sidebar:
             config["status_site"] = "ABERTO"
             salvar_config(config)
             registrar_log("Consulta ABERTA", nivel)
-            st.rerun()
+            st.experimental_rerun()
         if col2.button("🔴 Fechar"):
             config["status_site"] = "FECHADO"
             salvar_config(config)
             registrar_log("Consulta FECHADA", nivel)
-            st.rerun()
+            st.experimental_rerun()
 
         # MASTER ONLY
         if nivel == "MASTER":
