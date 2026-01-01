@@ -70,6 +70,7 @@ st.markdown("""
 
 # ---------------- URL DA PLANILHA ----------------
 URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1x4P8sHQ8cdn7tJCDRjPP8qm4aFIKJ1tx/export?format=xlsx"
+SENHA_ADMIN = "LPA2026"
 
 # ---------------- CONTROLE (ABERTO / FECHADO) ----------------
 @st.cache_data(ttl=300)
@@ -84,10 +85,6 @@ def carregar_controle():
 
 status_site = carregar_controle()
 
-if status_site == "FECHADO":
-    st.warning("🚫 Consulta temporariamente indisponível. Aguarde a liberação das rotas.")
-    st.stop()
-
 # ---------------- BASE PRINCIPAL + TIMESTAMP ----------------
 @st.cache_data(ttl=300)
 def carregar_base():
@@ -99,17 +96,17 @@ def carregar_base():
 
 df, ultima_atualizacao = carregar_base()
 
-# ---------------- SIDEBAR ADMIN ----------------
+# ---------------- SIDEBAR ADMIN (INDEPENDENTE DO STATUS) ----------------
 with st.sidebar:
     st.markdown("## 🔒 Área Administrativa")
     st.markdown("---")
 
     senha = st.text_input("Senha ADMIN", type="password")
 
-    if senha == "LPA2026":
+    if senha == SENHA_ADMIN:
         st.success("Acesso liberado")
 
-        st.markdown(f"**🔄 Status da consulta:** `{status_site}`")
+        st.markdown(f"**🚦 Status da consulta:** `{status_site}`")
         st.markdown(f"**🕒 Última atualização:** `{ultima_atualizacao}`")
 
         if st.button("🔁 Atualizar agora"):
@@ -123,6 +120,11 @@ with st.sidebar:
 
     elif senha:
         st.error("Senha incorreta")
+
+# ---------------- BLOQUEIO APENAS PARA USUÁRIO COMUM ----------------
+if status_site == "FECHADO":
+    st.warning("🚫 Consulta temporariamente indisponível. Aguarde a liberação das rotas.")
+    st.stop()
 
 # ---------------- CONFERÊNCIA DAS COLUNAS ----------------
 colunas_necessarias = ["Placa", "Nome", "Bairro", "Rota", "Cidade"]
