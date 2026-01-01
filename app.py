@@ -1,21 +1,14 @@
 import streamlit as st
+import pandas as pd
 import json
 import os
 from datetime import datetime
-import pandas as pd
 
 # ================= CONFIGURAÇÃO DA PÁGINA =================
 st.set_page_config(
     page_title="SPX | Consulta de Rotas",
     page_icon="🚚",
     layout="centered"
-)
-
-# ================= PLANILHA =================
-PLANILHA_URL = (
-    "https://docs.google.com/spreadsheets/d/"
-    "1F8HC2D8UxRc5R_QBdd-zWu7y6Twqyk3r0NTPN0HCWUI"
-    "/export?format=xlsx"
 )
 
 # ================= ARQUIVO DE PERSISTÊNCIA =================
@@ -53,6 +46,27 @@ def registrar_acao(usuario, acao):
     })
     save_config(config)
 
+# ================= ESTILO =================
+st.markdown("""
+<style>
+.card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-left: 6px solid #ff7a00;
+    margin-bottom: 16px;
+}
+.card h4 {
+    margin-bottom: 12px;
+}
+.card p {
+    margin: 4px 0;
+    font-size: 15px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ================= CABEÇALHO =================
 st.title("🚚 SPX | Consulta de Rotas")
 st.markdown("Consulta disponível **somente após a alocação das rotas**.")
@@ -76,11 +90,8 @@ with st.sidebar:
         elif senha:
             st.error("Senha incorreta")
 
-        # ===== CONTROLE =====
         if nivel in ["ADMIN", "MASTER"]:
             st.markdown("---")
-            st.markdown("### ⚙️ Controle da Consulta")
-
             col1, col2 = st.columns(2)
 
             with col1:
@@ -95,20 +106,16 @@ with st.sidebar:
                     registrar_acao(nivel, "FECHOU CONSULTA")
                     st.warning("Consulta FECHADA")
 
-        # ===== MASTER =====
         if nivel == "MASTER":
             st.markdown("---")
-            st.markdown("### 🔑 Trocar senha MASTER")
-
             nova_senha = st.text_input("Nova senha MASTER", type="password")
 
             if st.button("Salvar nova senha"):
                 if nova_senha:
                     config["senha_master"] = nova_senha
                     registrar_acao("MASTER", "ALTEROU SENHA MASTER")
+                    save_config(config)
                     st.success("Senha MASTER atualizada")
-                else:
-                    st.error("Digite uma senha válida")
 
             st.markdown("---")
             st.markdown("### 📜 Histórico de ações")
@@ -135,38 +142,22 @@ st.markdown("### 🔍 Consulta")
 
 nome = st.text_input("Digite o nome do motorista")
 
-@st.cache_data(ttl=300)
-def carregar_base():
-    return pd.read_excel(PLANILHA_URL)
-
 if nome:
-    try:
-        df = carregar_base()
+    url = "https://docs.google.com/spreadsheets/d/1F8HC2D8UxRc5R_QBdd-zWu7y6Twqyk3r0NTPN0HCWUI/export?format=xlsx"
+    df = pd.read_excel(url)
 
-        resultado = df[
-            df["Nome"].astype(str)
-            .str.contains(nome, case=False, na=False)
-        ]
+    resultado = df[df["Nome"].str.contains(nome, case=False, na=False)]
 
-        if resultado.empty:
-            st.error("❌ Rota não atribuída para este motorista.")
-        else:
-            for _, row in resultado.iterrows():
-                st.markdown(
-                    f"""
-🚚 **Rota:** {row.get('Rota', '-')}
-
-👤 **Motorista:** {row.get('Nome', '-')}
-
-🚗 **Placa:** {row.get('Placa', '-')}
-
-🏙️ **Cidade:** {row.get('Cidade', '-')}
-
-📍 **Bairro:** {row.get('Bairro', '-')}
-
----
-"""
-                )
-
-    except Exception as e:
-        st.error("Erro ao carregar a base de dados.")
+    if resultado.empty:
+        st.warning("Nenhuma rota encontrada.")
+    else:
+        for _, row in resultado.iterrows():
+            st.markdown(f"""
+            <div class="card">
+                <h4>🚚 Rota: {row['Rota']}</h4>
+                <p>👤 <strong>Motorista:</strong> {row['Nome']}</p>
+                <p>🚗 <strong>Placa:</strong> {row['Placa']}</p>
+                <p>🏙️ <strong>Cidade:</strong> {row['Cidade']}</p>
+                <p>📍 <strong>Bairro:</strong> {row['Bairro']}</p>
+            </div>
+            """, unsafe_allow_html=True)
