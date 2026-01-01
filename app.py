@@ -1,59 +1,66 @@
 import streamlit as st
+import json
+import os
 from datetime import datetime
 
-# ================= CONFIGURAÇÃO DA PÁGINA =================
+# ================= CONFIGURAÇÃO =================
 st.set_page_config(
     page_title="SPX | Consulta de Rotas",
     page_icon="🚚",
     layout="centered"
 )
 
-# ================= SENHAS PADRÃO =================
-SENHA_ADMIN_PADRAO = "LPA2026"
-SENHA_MASTER_PADRAO = "MASTER2026"
+ARQUIVO_STATUS = "status.json"
 
-# ================= SESSION STATE =================
-if "status_site" not in st.session_state:
-    st.session_state.status_site = "FECHADO"
+# ================= CONFIG PADRÃO =================
+CONFIG_PADRAO = {
+    "status_site": "FECHADO",
+    "senha_master": "MASTER2026",
+    "historico": []
+}
 
-if "senha_master" not in st.session_state:
-    st.session_state.senha_master = SENHA_MASTER_PADRAO
+# ================= CARREGAR / CRIAR STATUS =================
+if not os.path.exists(ARQUIVO_STATUS):
+    with open(ARQUIVO_STATUS, "w", encoding="utf-8") as f:
+        json.dump(CONFIG_PADRAO, f, indent=4)
 
-if "historico" not in st.session_state:
-    st.session_state.historico = []
+with open(ARQUIVO_STATUS, "r", encoding="utf-8") as f:
+    config = json.load(f)
 
-# ================= FUNÇÃO LOG =================
+# ================= FUNÇÃO SALVAR =================
+def salvar():
+    with open(ARQUIVO_STATUS, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=4)
+
 def registrar_acao(usuario, acao):
-    st.session_state.historico.append({
+    config["historico"].append({
         "data": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
         "usuario": usuario,
         "acao": acao
     })
+    salvar()
 
 # ================= CABEÇALHO =================
 st.title("🚚 SPX | Consulta de Rotas")
 st.markdown("Consulta disponível **somente após a alocação das rotas**.")
 st.divider()
 
-# ================= ÁREA ADMINISTRATIVA =================
+# ================= ÁREA ADMIN =================
 with st.sidebar:
     st.markdown("## 🔒 Área Administrativa")
     senha = st.text_input("Senha", type="password")
 
     nivel = None
 
-    if senha == st.session_state.senha_master:
+    if senha == config["senha_master"]:
         nivel = "MASTER"
         st.success("Acesso MASTER liberado")
-
-    elif senha == SENHA_ADMIN_PADRAO:
+    elif senha == "LPA2026":
         nivel = "ADMIN"
         st.success("Acesso ADMIN liberado")
-
     elif senha:
         st.error("Senha incorreta")
 
-    # ================= CONTROLES =================
     if nivel in ["ADMIN", "MASTER"]:
         st.markdown("---")
         st.markdown("### ⚙️ Controle da Consulta")
@@ -62,54 +69,45 @@ with st.sidebar:
 
         with col1:
             if st.button("🔓 ABRIR"):
-                st.session_state.status_site = "ABERTO"
+                config["status_site"] = "ABERTO"
                 registrar_acao(nivel, "ABRIU CONSULTA")
                 st.success("Consulta ABERTA")
 
         with col2:
             if st.button("🔒 FECHAR"):
-                st.session_state.status_site = "FECHADO"
+                config["status_site"] = "FECHADO"
                 registrar_acao(nivel, "FECHOU CONSULTA")
                 st.warning("Consulta FECHADA")
 
-    # ================= MASTER ONLY =================
     if nivel == "MASTER":
         st.markdown("---")
         st.markdown("### 🔑 Trocar senha MASTER")
-
-        nova_senha = st.text_input("Nova senha MASTER", type="password")
+        nova = st.text_input("Nova senha MASTER", type="password")
 
         if st.button("Salvar nova senha"):
-            if nova_senha:
-                st.session_state.senha_master = nova_senha
+            if nova:
+                config["senha_master"] = nova
                 registrar_acao("MASTER", "ALTEROU SENHA MASTER")
-                st.success("Senha MASTER atualizada")
+                st.success("Senha atualizada")
             else:
-                st.error("Digite uma senha válida")
+                st.error("Senha inválida")
 
         st.markdown("---")
-        st.markdown("### 📜 Histórico de ações")
+        st.markdown("### 📜 Histórico")
+        for h in reversed(config["historico"]):
+            st.markdown(f"- {h['data']} | **{h['usuario']}** | {h['acao']}")
 
-        if st.session_state.historico:
-            for h in reversed(st.session_state.historico):
-                st.markdown(
-                    f"- {h['data']} | **{h['usuario']}** | {h['acao']}"
-                )
-        else:
-            st.info("Nenhuma ação registrada")
-
-# ================= STATUS ATUAL =================
-st.markdown(f"### 📌 Status atual: **{st.session_state.status_site}**")
+# ================= STATUS GLOBAL =================
+st.markdown(f"### 📌 Status atual: **{config['status_site']}**")
 st.divider()
 
 # ================= BLOQUEIO =================
-if st.session_state.status_site == "FECHADO":
+if config["status_site"] == "FECHADO":
     st.warning("🚫 Consulta indisponível no momento.")
     st.stop()
 
-# ================= CONSULTA (MANTIDA) =================
+# ================= CONSULTA =================
 st.markdown("### 🔍 Consulta")
-
 nome = st.text_input("Digite o nome do motorista")
 
 if nome:
