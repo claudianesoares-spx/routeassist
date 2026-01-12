@@ -64,6 +64,13 @@ st.markdown("""
     margin: 4px 0;
     font-size: 15px;
 }
+.card a {
+    display: inline-block;
+    margin-top: 10px;
+    color: #ff7a00;
+    font-weight: bold;
+    text-decoration: none;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -160,9 +167,22 @@ if id_motorista:
             st.warning("🚫 No momento não há rotas disponíveis.")
         else:
             for _, row in rotas_disponiveis.iterrows():
+
+                form_url = (
+                    "https://docs.google.com/forms/d/e/1FAIpQLSffKb0EPcHCRXv-XiHhgk-w2bTGbt179fJkr879jNdp-AbTxg/viewform"
+                    f"?usp=pp_url"
+                    f"&entry.392776957={id_motorista}"
+                    f"&entry.625563351={row['Cidade']}"
+                    f"&entry.1284288730={row['Bairro']}"
+                    f"&entry.1534916252=Tenho+Interesse"
+                )
+
                 st.markdown(f"""
                 <div class="card">
                     <p>🏙️ <strong>Cidade:</strong> {row['Cidade']}</p>
                     <p>📍 <strong>Bairro:</strong> {row['Bairro']}</p>
+                    <a href="{form_url}" target="_blank">
+                        👉 Tenho interesse nesta rota
+                    </a>
                 </div>
                 """, unsafe_allow_html=True)
