@@ -18,11 +18,13 @@ st.write("Digite seu ID de motorista para consultar suas rotas")
 # =========================
 @st.cache_data
 def carregar_dados():
-    url = "COLE_AQUI_O_LINK_CSV_DA_PLANILHA"
-    df = pd.read_csv(url)
+    url = "https://docs.google.com/spreadsheets/d/SEU_ID_DA_PLANILHA/export?format=xlsx"
+    df = pd.read_excel(url)
 
-    # Garantir que ID seja string
+    # Normalização
     df["ID"] = df["ID"].astype(str).str.strip()
+    df["Cidade"] = df["Cidade"].astype(str)
+    df["Bairro"] = df["Bairro"].astype(str)
 
     return df
 
@@ -34,7 +36,7 @@ df = carregar_dados()
 id_motorista = st.text_input("Digite seu ID de motorista")
 
 # =========================
-# CONSULTA DE ROTAS DO DRIVER
+# CONSULTA DO DRIVER
 # =========================
 if id_motorista:
     resultado = df[df["ID"] == id_motorista.strip()]
@@ -61,10 +63,7 @@ st.markdown("---")
 st.subheader("📦 Rotas disponíveis")
 
 rotas_disponiveis = df[
-    df["ID"].isna()
-    | (df["ID"] == "")
-    | (df["ID"].str.lower() == "nan")
-    | (df["ID"] == "-")
+    df["ID"].isin(["", "-", "nan", "None"]) | df["ID"].isna()
 ]
 
 if rotas_disponiveis.empty:
