@@ -27,7 +27,6 @@ def load_config():
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(DEFAULT_CONFIG, f, indent=4, ensure_ascii=False)
         return DEFAULT_CONFIG.copy()
-
     with open(CONFIG_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -181,6 +180,7 @@ if id_motorista:
                 <div class="card">
                     <p>🏙️ <strong>Cidade:</strong> {row['Cidade']}</p>
                     <p>📍 <strong>Bairro:</strong> {row['Bairro']}</p>
+                    <p>🚗 <strong>Tipo Veículo:</strong> {row.get('Tipo Veiculo', 'Não informado')}</p>
                     <a href="{form_url}" target="_blank">
                         👉 Tenho interesse nesta rota
                     </a>
