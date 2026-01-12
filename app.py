@@ -165,7 +165,7 @@ if id_motorista:
         if rotas_disponiveis.empty:
             st.warning("🚫 No momento não há rotas disponíveis.")
         else:
-            # Agrupar por cidade usando expanders sem alterar cards
+            # ===== ORGANIZAÇÃO POR CIDADE =====
             cidades = rotas_disponiveis["Cidade"].unique()
             for cidade in cidades:
                 with st.expander(f"🏙️ {cidade}"):
@@ -180,6 +180,7 @@ if id_motorista:
                             f"&entry.1534916252=Tenho+Interesse"
                         )
 
+                        # Mantendo exatamente o mesmo estilo Shopee
                         st.markdown(f"""
                         <div class="card">
                             <p>🏙️ <strong>Cidade:</strong> {row['Cidade']}</p>
