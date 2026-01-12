@@ -124,14 +124,14 @@ if id_motorista:
     url = "https://docs.google.com/spreadsheets/d/1F8HC2D8UxRc5R_QBdd-zWu7y6Twqyk3r0NTPN0HCWUI/export?format=xlsx"
     df = pd.read_excel(url)
 
-    # normalização (mantendo sua lógica)
+    # Normalização
     df["ID"] = df["ID"].astype(str).str.strip()
     id_motorista = id_motorista.strip()
 
-    # ================= BUSCA PELO ID =================
+    # ================= BUSCA POR ID =================
     resultado = df[df["ID"] == id_motorista]
 
-    # ===== CASO 1: ID EXISTE (mantém exatamente como já funcionava) =====
+    # ===== CASO 1: DRIVER COM ROTA =====
     if not resultado.empty:
         for _, row in resultado.iterrows():
             st.markdown(f"""
@@ -144,13 +144,13 @@ if id_motorista:
             </div>
             """, unsafe_allow_html=True)
 
-    # ===== CASO 2: ID NÃO EXISTE → MOSTRA ROTAS COM ID VAZIO =====
+    # ===== CASO 2: DRIVER SEM ROTA =====
     else:
-        st.info("ℹ️ Nenhuma rota atribuída ao seu ID.")
-        st.markdown("### 📦 Rotas disponíveis")
+        st.info("ℹ️ No momento você não possui rota atribuída.")
+        st.markdown("### 📦 Regiões com rotas disponíveis")
 
         rotas_disponiveis = df[
-            (df["ID"] == "") | (df["ID"].str.lower() == "nan")
+            df["ID"].isna() | (df["ID"] == "") | (df["ID"].str.lower() == "nan")
         ]
 
         if rotas_disponiveis.empty:
@@ -159,7 +159,6 @@ if id_motorista:
             for _, row in rotas_disponiveis.iterrows():
                 st.markdown(f"""
                 <div class="card">
-                    <h4>🚚 Rota: {row['Rota']}</h4>
                     <p>🏙️ <strong>Cidade:</strong> {row['Cidade']}</p>
                     <p>📍 <strong>Bairro:</strong> {row['Bairro']}</p>
                 </div>
