@@ -166,10 +166,48 @@ if id_motorista:
             st.divider()
             st.markdown("### 📦 Rotas disponíveis")
 
-            cidades = rotas_disponiveis["Cidade"].unique()
-            for cidade in cidades:
+            for cidade in rotas_disponiveis["Cidade"].unique():
                 with st.expander(f"🏙️ {cidade}"):
-                    for _, row in rotas_disponiveis[rotas_disponiveis["Cidade"] == cidade].iterrows():
+                    for _, row in rotas_disponiveis[
+                        rotas_disponiveis["Cidade"] == cidade
+                    ].iterrows():
+
+                        form_url = (
+                            "https://docs.google.com/forms/d/e/1FAIpQLSffKb0EPcHCRXv-XiHhgk-w2bTGbt179fJkr879jNdp-AbTxg/viewform"
+                            f"?usp=pp_url"
+                            f"&entry.392776957={id_motorista}"
+                            f"&entry.1682939517={row['Rota']}"
+                            f"&entry.2002352354={row['Placa']}"
+                            f"&entry.1100254277={row.get('Tipo Veiculo', '')}"
+                            f"&entry.625563351={row['Cidade']}"
+                            f"&entry.1284288730={row['Bairro']}"
+                            f"&entry.1534916252=Tenho+Interesse"
+                        )
+
+                        st.markdown(f"""
+                        <div class="card">
+                            <p>📍 <strong>Bairro:</strong> {row['Bairro']}</p>
+                            <p>🚗 <strong>Tipo Veículo:</strong> {row.get('Tipo Veiculo', 'Não informado')}</p>
+                            <a href="{form_url}" target="_blank">
+                                👉 Tenho interesse nesta rota
+                            </a>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+    # ===== DRIVER SEM ROTA =====
+    else:
+        st.info("ℹ️ No momento você não possui rota atribuída.")
+        st.markdown("### 📦 Regiões com rotas disponíveis")
+
+        if rotas_disponiveis.empty:
+            st.warning("🚫 No momento não há rotas disponíveis.")
+        else:
+            for cidade in rotas_disponiveis["Cidade"].unique():
+                with st.expander(f"🏙️ {cidade}"):
+                    for _, row in rotas_disponiveis[
+                        rotas_disponiveis["Cidade"] == cidade
+                    ].iterrows():
+
                         form_url = (
                             "https://docs.google.com/forms/d/e/1FAIpQLSffKb0EPcHCRXv-XiHhgk-w2bTGbt179fJkr879jNdp-AbTxg/viewform"
                             f"?usp=pp_url"
