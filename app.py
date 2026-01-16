@@ -91,18 +91,15 @@ st.divider()
 # ================= SIDEBAR / ADMIN =================
 with st.sidebar:
     with st.expander("🔒 Área Administrativa", expanded=False):
-
         senha = st.text_input("Senha", type="password")
         nivel = None
 
         if senha == config["senha_master"]:
             nivel = "MASTER"
             st.success("Acesso MASTER liberado")
-
         elif senha == "LPA2026":
             nivel = "ADMIN"
             st.success("Acesso ADMIN liberado")
-
         elif senha:
             st.error("Senha incorreta")
 
@@ -148,11 +145,6 @@ if id_motorista:
     df_drivers["ID"] = df_drivers["ID"].str.strip()
     ids_ativos = set(df_drivers["ID"].dropna())
 
-    # ===== BASE DE INTERESSE (CLIQUE POR ROTA) =====
-    df_interesse = pd.read_excel(url, sheet_name="INTERESSE", dtype=str)
-    df_interesse["ID"] = df_interesse["ID"].str.strip()
-    df_interesse["Controle"] = df_interesse["Controle"].str.strip()
-
     id_motorista = id_motorista.strip()
 
     # ===== VALIDAÇÃO DO ID =====
@@ -188,24 +180,9 @@ if id_motorista:
         if liberar_dobra and not rotas_disponiveis.empty:
             st.divider()
             st.markdown("### 📦 Rotas disponíveis")
-
             for cidade in rotas_disponiveis["Cidade"].unique():
                 with st.expander(f"🏙️ {cidade}"):
                     for _, row in rotas_disponiveis[rotas_disponiveis["Cidade"] == cidade].iterrows():
-                        
-                        # ===== VERIFICA SE MOTORISTA JÁ CLICOU =====
-                        controle_id = f"{id_motorista}_{row['Rota']}"
-                        if controle_id in df_interesse["Controle"].values:
-                            st.markdown(f"""
-                            <div class="card">
-                                <p>📍 <strong>Bairro:</strong> {row['Bairro']}</p>
-                                <p>🚗 <strong>Tipo Veículo:</strong> {row.get('Tipo Veiculo', 'Não informado')}</p>
-                                <p>✅ Solicitação já registrada. Aguarde análise.</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            continue
-
-                        # ===== FORMULÁRIO =====
                         form_url = (
                             "https://docs.google.com/forms/d/e/1FAIpQLSffKb0EPcHCRXv-XiHhgk-w2bTGbt179fJkr879jNdp-AbTxg/viewform"
                             f"?usp=pp_url"
@@ -217,7 +194,6 @@ if id_motorista:
                             f"&entry.1284288730={row['Bairro']}"
                             f"&entry.1534916252=Tenho+Interesse"
                         )
-
                         st.markdown(f"""
                         <div class="card">
                             <p>📍 <strong>Bairro:</strong> {row['Bairro']}</p>
@@ -232,27 +208,12 @@ if id_motorista:
     else:
         st.info("ℹ️ No momento você não possui rota atribuída.")
         st.markdown("### 📦 Regiões com rotas disponíveis")
-
         if rotas_disponiveis.empty:
             st.warning("🚫 No momento não há rotas disponíveis.")
         else:
             for cidade in rotas_disponiveis["Cidade"].unique():
                 with st.expander(f"🏙️ {cidade}"):
                     for _, row in rotas_disponiveis[rotas_disponiveis["Cidade"] == cidade].iterrows():
-
-                        # ===== VERIFICA SE MOTORISTA JÁ CLICOU =====
-                        controle_id = f"{id_motorista}_{row['Rota']}"
-                        if controle_id in df_interesse["Controle"].values:
-                            st.markdown(f"""
-                            <div class="card">
-                                <p>📍 <strong>Bairro:</strong> {row['Bairro']}</p>
-                                <p>🚗 <strong>Tipo Veículo:</strong> {row.get('Tipo Veiculo', 'Não informado')}</p>
-                                <p>✅ Solicitação já registrada. Aguarde análise.</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            continue
-
-                        # ===== FORMULÁRIO =====
                         form_url = (
                             "https://docs.google.com/forms/d/e/1FAIpQLSffKb0EPcHCRXv-XiHhgk-w2bTGbt179fJkr879jNdp-AbTxg/viewform"
                             f"?usp=pp_url"
@@ -264,7 +225,6 @@ if id_motorista:
                             f"&entry.1284288730={row['Bairro']}"
                             f"&entry.1534916252=Tenho+Interesse"
                         )
-
                         st.markdown(f"""
                         <div class="card">
                             <p>📍 <strong>Bairro:</strong> {row['Bairro']}</p>
@@ -276,14 +236,11 @@ if id_motorista:
                         """, unsafe_allow_html=True)
 
 # ================= ASSINATURA =================
-st.markdown(
-    """
-    <hr>
-    <div style="text-align: center; color: #888; font-size: 0.85em;">
-        <strong>RouteAssist</strong><br>
-        Concept & Development — Claudiane Vieira<br>
-        Since Dec/2025
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<hr>
+<div style="text-align: center; color: #888; font-size: 0.85em;">
+    <strong>RouteAssist</strong><br>
+    Concept & Development — Claudiane Vieira<br>
+    Since Dec/2025
+</div>
+""", unsafe_allow_html=True)
