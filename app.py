@@ -11,6 +11,13 @@ st.set_page_config(
     layout="centered"
 )
 
+# ================= CACHE (60s) =================
+@st.cache_data(ttl=60, show_spinner=False)
+def carregar_rotas(url):
+    df = pd.read_excel(url)
+    df["ID"] = df["ID"].astype(str).str.strip()
+    return df
+
 # ================= ARQUIVO DE PERSISTÊNCIA =================
 CONFIG_FILE = "config.json"
 
@@ -45,26 +52,6 @@ def registrar_acao(usuario, acao):
     })
     save_config(config)
 
-# ================= CACHE (60s) =================
-@st.cache_data(ttl=60, show_spinner=False)
-def carregar_rotas(url):
-    df = pd.read_excel(url)
-    df["ID"] = df["ID"].astype(str).str.strip()
-    return df
-
-@st.cache_data(ttl=60, show_spinner=False)
-def carregar_drivers_ativos(url):
-    df = pd.read_excel(url, sheet_name="DRIVERS ATIVOS", dtype=str)
-    df["ID"] = df["ID"].str.strip()
-    return df
-
-@st.cache_data(ttl=60, show_spinner=False)
-def carregar_interesse(url):
-    df = pd.read_excel(url)
-    df["ID"] = df["ID"].astype(str).str.strip()
-    df["Controle 01"] = df["Controle 01"].astype(str).str.strip()
-    return df
-
 # ================= REGRA DE HORÁRIO (10:05) =================
 agora = datetime.now()
 liberar_dobra = (
@@ -83,19 +70,9 @@ st.markdown("""
     border-left: 6px solid #ff7a00;
     margin-bottom: 16px;
 }
-.card h4 {
-    margin-bottom: 12px;
-}
 .card p {
     margin: 4px 0;
     font-size: 15px;
-}
-.card a {
-    display: inline-block;
-    margin-top: 10px;
-    color: #ff7a00;
-    font-weight: bold;
-    text-decoration: none;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -144,72 +121,52 @@ with st.sidebar:
 st.markdown(f"### 📌 Status atual: **{config['status_site']}**")
 st.divider()
 
-# ================= BLOQUEIO =================
+# ================= PAINEL OPERACIONAL ADMIN =================
+if nivel in ["ADMIN", "MASTER"]:
+
+    url_rotas = "https://docs.google.com/spreadsheets/d/1F8HC2D8UxRc5R_QBdd-zWu7y6Twqyk3r0NTPN0HCWUI/export?format=xlsx"
+    df_admin = carregar_rotas(url_rotas)
+
+    rotas_disponiveis_admin = df_admin[
+        df_admin["ID"].isna() |
+        (df_admin["ID"] == "") |
+        (df_admin["ID"].str.lower() == "nan") |
+        (df_admin["ID"] == "-")
+    ]
+
+    st.markdown("## 📊 Painel Operacional")
+
+    st.info(f"""
+📌 **Status do sistema:** {config['status_site']}  
+🕒 **Horário atual:** {agora.strftime('%H:%M')}  
+📦 **Dobra liberada:** {"SIM" if liberar_dobra else "NÃO"}
+""")
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("🚚 Total de rotas", len(df_admin))
+    c2.metric("✅ Atribuídas", len(df_admin) - len(rotas_disponiveis_admin))
+    c3.metric("📦 Disponíveis", len(rotas_disponiveis_admin))
+
+    st.markdown("### 📦 Rotas disponíveis no momento")
+
+    if rotas_disponiveis_admin.empty:
+        st.success("Nenhuma rota disponível 🎉")
+    else:
+        st.dataframe(
+            rotas_disponiveis_admin[
+                ["Rota", "Cidade", "Bairro", "Tipo Veiculo"]
+            ].sort_values(by=["Cidade", "Bairro"]),
+            use_container_width=True,
+            hide_index=True
+        )
+
+    st.divider()
+
+# ================= BLOQUEIO PARA DRIVERS =================
 if config["status_site"] == "FECHADO":
     st.warning("🚫 Consulta indisponível no momento.")
     st.stop()
 
-# ================= CONSULTA =================
+# ================= CONSULTA DRIVER =================
 st.markdown("### 🔍 Consulta Operacional de Rotas")
 id_motorista = st.text_input("Digite seu ID de motorista")
-
-if id_motorista:
-    url_rotas = "https://docs.google.com/spreadsheets/d/1F8HC2D8UxRc5R_QBdd-zWu7y6Twqyk3r0NTPN0HCWUI/export?format=xlsx"
-    url_interesse = "https://docs.google.com/spreadsheets/d/1ux9UP_oJ9VTCTB_YMpvHr1VEPpFHdIBY2pudgehtTIE/export?format=xlsx"
-
-    # ===== BASE DE ROTAS =====
-    df = carregar_rotas(url_rotas)
-
-    # ===== BASE DE DRIVERS ATIVOS =====
-    df_drivers = carregar_drivers_ativos(url_rotas)
-    ids_ativos = set(df_drivers["ID"].dropna())
-
-    id_motorista = id_motorista.strip()
-
-    # ===== VALIDAÇÃO DO ID =====
-    if id_motorista not in ids_ativos:
-        st.warning(
-            "⚠️ ID não encontrado na base de motoristas ativos.\n\n"
-            "Verifique se digitou corretamente."
-        )
-        st.stop()
-
-    # ===== RESULTADOS DO MOTORISTA =====
-    resultado = df[df["ID"] == id_motorista]
-
-    # ===== ROTAS DISPONÍVEIS =====
-    rotas_disponiveis = df[
-        df["ID"].isna() |
-        (df["ID"] == "") |
-        (df["ID"].str.lower() == "nan") |
-        (df["ID"] == "-")
-    ]
-
-    # ===== PLANILHA INTERESSE =====
-    df_interesse = carregar_interesse(url_interesse)
-
-    # ===== DRIVER COM ROTA =====
-    if not resultado.empty:
-        for _, row in resultado.iterrows():
-            st.markdown(f"""
-            <div class="card">
-                <h4>🚚 Rota: {row['Rota']}</h4>
-                <p>👤 <strong>Motorista:</strong> {row['Nome']}</p>
-                <p>🚗 <strong>Placa:</strong> {row['Placa']}</p>
-                <p>🏙️ <strong>Cidade:</strong> {row['Cidade']}</p>
-                <p>📍 <strong>Bairro:</strong> {row['Bairro']}</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-# ================= ASSINATURA =================
-st.markdown(
-    """
-    <hr>
-    <div style="text-align: center; color: #888; font-size: 0.85em;">
-        <strong>RouteAssist</strong><br>
-        Concept & Development — Claudiane Vieira<br>
-        Since Dec/2025
-    </div>
-    """,
-    unsafe_allow_html=True
-)
