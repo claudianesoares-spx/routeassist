@@ -91,7 +91,6 @@ st.divider()
 # ================= SIDEBAR / ADMIN =================
 with st.sidebar:
     with st.expander("🔒 Área Administrativa", expanded=False):
-
         senha = st.text_input("Senha", type="password")
         nivel = None
 
@@ -169,9 +168,7 @@ if id_motorista:
     df_interesse = pd.read_excel(url_interesse)
     df_interesse["ID"] = df_interesse["ID"].astype(str).str.strip()
     df_interesse["Time"] = df_interesse["Time"].astype(str).str.strip()
-    df_interesse["Data Exp."] = pd.to_datetime(
-        df_interesse["Data Exp."], errors="coerce"
-    ).dt.date
+    df_interesse["Data Exp."] = pd.to_datetime(df_interesse["Data Exp."], errors="coerce").dt.date
 
     # ===== DRIVER COM ROTA =====
     if not resultado.empty:
