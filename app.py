@@ -45,13 +45,6 @@ def registrar_acao(usuario, acao):
     })
     save_config(config)
 
-# ================= REGRA DE HORÁRIO (10:05) =================
-agora = datetime.now()
-liberar_dobra = (
-    agora.hour > 10 or
-    (agora.hour == 10 and agora.minute >= 5)
-)
-
 # ================= ESTILO =================
 st.markdown("""
 <style>
@@ -116,6 +109,35 @@ with st.sidebar:
                     config["status_site"] = "FECHADO"
                     registrar_acao(nivel, "FECHOU CONSULTA")
                     st.warning("Consulta FECHADA")
+
+            # ================= ADMIN PANEL =================
+            st.markdown("### 🗂️ Painel de Controle - Rotas Disponíveis")
+            try:
+                url_rotas = "https://docs.google.com/spreadsheets/d/1F8HC2D8UxRc5R_QBdd-zWu7y6Twqyk3r0NTPN0HCWUI/export?format=xlsx"
+                df_rotas = pd.read_excel(url_rotas)
+                rotas_disponiveis_admin = df_rotas[
+                    df_rotas["ID"].isna() |
+                    (df_rotas["ID"] == "") |
+                    (df_rotas["ID"].str.lower() == "nan") |
+                    (df_rotas["ID"] == "-")
+                ]
+
+                if rotas_disponiveis_admin.empty:
+                    st.warning("🚫 Nenhuma rota disponível no momento.")
+                else:
+                    for _, row in rotas_disponiveis_admin.iterrows():
+                        data_fmt = row["Data Exp."].strftime("%d/%m/%Y") if pd.notna(row["Data Exp."]) else "-"
+                        st.markdown(f"""
+                        <div class="card">
+                            <h4>🚚 Rota: {row['Rota']}</h4>
+                            <p>🏙️ Cidade: {row['Cidade']}</p>
+                            <p>📍 Bairro: {row['Bairro']}</p>
+                            <p>🚗 Tipo Veículo: {row.get('Tipo Veiculo', 'Não informado')}</p>
+                            <p>📅 Data da Expedição: {data_fmt}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Erro ao carregar rotas no painel admin: {e}")
 
 # ================= STATUS ATUAL =================
 st.markdown(f"### 📌 Status atual: **{config['status_site']}**")
@@ -193,7 +215,6 @@ if id_motorista:
             for cidade in rotas_disponiveis["Cidade"].unique():
                 with st.expander(f"🏙️ {cidade}"):
                     for _, row in rotas_disponiveis[rotas_disponiveis["Cidade"] == cidade].iterrows():
-                        # Condicional de "já clicou" baseado na mesma Data Exp.
                         ja_clicou = not df_interesse[
                             (df_interesse["ID"] == id_motorista) &
                             (df_interesse["Controle 01"] == row["Rota"]) &
