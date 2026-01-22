@@ -22,6 +22,7 @@
             padding: 40px;
             border-radius: 16px;
             box-shadow: 0 0 25px rgba(0,0,0,0.6);
+            max-width: 420px;
         }
 
         h1 {
@@ -49,18 +50,28 @@
             background-color: #00a8e8;
             transform: scale(1.05);
         }
+
+        .footer {
+            margin-top: 35px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <h1>RouteAssist</h1>
-        <p>Central de apoio operacional – Belém</p>
+        <p>Operational Support Center – Belém</p>
 
         <button class="btn"
             onclick="window.open('https://routeassist-belem.streamlit.app/', '_blank')">
-            Acessar Sistema
+            Access System
         </button>
+
+        <div class="footer">
+            Created and developed by Claudiane Vieira · Dec 2025
+        </div>
     </div>
 </body>
 </html>
