@@ -38,23 +38,25 @@
             color: #555;
         }
 
-        .btn {
-            margin-top: 32px;
-            padding: 16px 36px;
-            font-size: 18px;
-            font-weight: bold;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            background-color: #00c6ff;
-            color: #002b36;
-            transition: all 0.3s ease;
+        .progress-container {
+            margin-top: 28px;
+            background: #e6e6e6;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 14px;
         }
 
-        .btn:hover {
-            background-color: #00a8e8;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #00c6ff;
+            transition: width 1s linear;
+        }
+
+        .status {
+            margin-top: 16px;
+            font-size: 14px;
+            color: #666;
         }
 
         .footer {
@@ -70,14 +72,33 @@
         <h1>RouteAssist</h1>
         <p>Central de apoio operacional – Belém</p>
 
-        <button class="btn"
-            onclick="window.open('https://routeassist-belem.streamlit.app/', '_blank')">
-            Acessar Sistema
-        </button>
+        <div class="status">
+            Alto volume de acessos detectado.<br>
+            Você está em uma fila virtual para melhor desempenho.
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
 
         <div class="footer">
             Created and developed by Claudiane Vieira · Dec 2025
         </div>
     </div>
+
+    <script>
+        let progress = 0;
+        const progressBar = document.getElementById("progressBar");
+
+        const interval = setInterval(() => {
+            progress += 10;
+            progressBar.style.width = progress + "%";
+
+            if (progress >= 100) {
+                clearInterval(interval);
+                window.location.href = "https://routeassist-belem.streamlit.app/";
+            }
+        }, 1000);
+    </script>
 </body>
 </html>
