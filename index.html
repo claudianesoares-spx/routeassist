@@ -1,89 +1,66 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>RouteAssist • Belém</title>
+    <meta charset="UTF-8">
+    <title>RouteAssist | Belém</title>
 
-  <style>
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background-color: #f4f6f8;
-      padding: 40px;
-    }
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
 
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: #ffffff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      text-align: center;
-    }
+        .container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.45);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.6);
+        }
 
-    h1 {
-      margin-bottom: 10px;
-    }
+        h1 {
+            margin-bottom: 10px;
+        }
 
-    p {
-      color: #555;
-    }
+        p {
+            opacity: 0.9;
+        }
 
-    .btn {
-      display: inline-block;
-      margin-top: 25px;
-      padding: 15px 30px;
-      background-color: #ff5722;
-      color: #ffffff;
-      text-decoration: none;
-      font-weight: bold;
-      border-radius: 8px;
-      font-size: 16px;
-    }
+        .btn {
+            margin-top: 30px;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: #00c6ff;
+            color: #002b36;
+            transition: 0.3s;
+        }
 
-    .btn:hover {
-      background-color: #e64a19;
-    }
-
-    .alert {
-      margin-top: 25px;
-      padding: 15px;
-      background-color: #fff3cd;
-      border-radius: 6px;
-      font-size: 14px;
-      color: #856404;
-    }
-
-    .footer {
-      margin-top: 30px;
-      font-size: 12px;
-      color: #999;
-    }
-  </style>
+        .btn:hover {
+            background-color: #00a8e8;
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>🚚 RouteAssist • Belém</h1>
-    <p>Plataforma operacional ativa.</p>
+    <div class="container">
+        <h1>RouteAssist</h1>
+        <p>Central de apoio operacional – Belém</p>
 
-    <a
-      class="btn"
-      href="https://routeassist-belem.streamlit.app/"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      👉 Acessar Operação Belém
-    </a>
-
-    <div class="alert">
-      ⚠️ Em horários de pico, o carregamento pode levar alguns segundos.<br>
-      Segurança e estabilidade sempre em primeiro lugar.
+        <button class="btn"
+            onclick="window.open('https://routeassist-belem.streamlit.app/', '_blank')">
+            Acessar Sistema
+        </button>
     </div>
-
-    <div class="footer">
-      © RouteAssist — Operação Belém
-    </div>
-  </div>
 </body>
 </html>
