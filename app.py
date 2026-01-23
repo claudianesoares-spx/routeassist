@@ -46,13 +46,12 @@ def registrar_acao(usuario, acao):
 # ================= URLs =================
 URL_ROTAS = "https://docs.google.com/spreadsheets/d/1F8HC2D8UxRc5R_QBdd-zWu7y6Twqyk3r0NTPN0HCWUI/export?format=csv&gid=1803149397"
 URL_DRIVERS = "https://docs.google.com/spreadsheets/d/1F8HC2D8UxRc5R_QBdd-zWu7y6Twqyk3r0NTPN0HCWUI/export?format=csv&gid=36116218"
-URL_INTERESSE = "https://docs.google.com/spreadsheets/d/1ux9UP_oJ9VTCTB_YMpvHr1VEPpFHdIBY2pudgehtTIE/export?format=csv&gid=1442170550"
 
 GOOGLE_FORM_URL = (
     "https://docs.google.com/forms/d/e/1FAIpQLSffKb0EPcHCRXv-XiHhgk-w2bTGbt179fJkr879jNdp-AbTxg/viewform"
 )
 
-# ================= CACHE ANTI-PICO =================
+# ================= CACHE (INALTERADO) =================
 @st.cache_data(ttl=120)
 def carregar_rotas(url):
     df = pd.read_csv(url)
@@ -68,14 +67,9 @@ def carregar_motoristas(url):
     df["ID"] = df["ID"].fillna("").astype(str).str.strip()
     return df
 
-@st.cache_data(ttl=60)
-def carregar_interesse(url):
-    df = pd.read_csv(url)
-    df.columns = df.columns.str.strip()
-    df["ID"] = df["ID"].astype(str).str.strip()
-    df["Controle 01"] = df["Controle 01"].astype(str).str.strip()
-    df["Data Exp."] = pd.to_datetime(df["Data Exp."], errors="coerce").dt.date
-    return df
+# ================= ESTADO DE SESSÃO =================
+if "interesses" not in st.session_state:
+    st.session_state.interesses = set()
 
 # ================= ESTILO =================
 st.markdown("""
@@ -87,10 +81,6 @@ st.markdown("""
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     border-left: 6px solid #ff7a00;
     margin-bottom: 16px;
-}
-a {
-    font-weight: bold;
-    color: #ff7a00;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -147,41 +137,28 @@ st.markdown("### 🔍 Consulta Operacional de Rotas")
 
 id_motorista = st.text_input("Digite seu ID de motorista").strip()
 
-consultar = st.button("🔍 Consultar rotas disponíveis")
+if st.button("🔍 Consultar rotas disponíveis"):
 
-if consultar:
     if not id_motorista:
         st.warning("⚠️ Informe seu ID de motorista.")
         st.stop()
 
     df_rotas = carregar_rotas(URL_ROTAS)
     df_drivers = carregar_motoristas(URL_DRIVERS)
-    df_interesse = carregar_interesse(URL_INTERESSE)
 
     if id_motorista not in set(df_drivers["ID"]):
         st.warning("⚠️ ID não encontrado na base de motoristas ativos.")
         st.stop()
 
-    resultado = df_rotas[df_rotas["ID"] == id_motorista]
+    # ================= ROTAS DISPONÍVEIS =================
     rotas_disponiveis = df_rotas[df_rotas["ID"] == ""]
-
-    if not resultado.empty:
-        for _, row in resultado.iterrows():
-            data_fmt = row["Data Exp."].strftime("%d/%m/%Y") if pd.notna(row["Data Exp."]) else "-"
-            st.markdown(f"""
-            <div class="card">
-                <h4>🚚 Rota: {row['Rota']}</h4>
-                <p>🏙️ Cidade: {row['Cidade']}</p>
-                <p>📍 Bairro: {row['Bairro']}</p>
-                <p>📅 Data: {data_fmt}</p>
-            </div>
-            """, unsafe_allow_html=True)
 
     if not rotas_disponiveis.empty:
         st.markdown("### 📦 Rotas disponíveis")
 
         for _, row in rotas_disponiveis.iterrows():
             data_fmt = row["Data Exp."].strftime("%d/%m/%Y") if pd.notna(row["Data Exp."]) else "-"
+            rota_key = f"{row['Rota']}_{row['Bairro']}_{data_fmt}"
 
             form_url = (
                 f"{GOOGLE_FORM_URL}"
@@ -198,9 +175,15 @@ if consultar:
                 <p>📍 Bairro: {row['Bairro']}</p>
                 <p>🚗 Tipo Veículo: {row.get('Tipo Veiculo','Não informado')}</p>
                 <p>📅 Data da Expedição: {data_fmt}</p>
-                <a href="{form_url}" target="_blank">✋ Tenho interesse nesta rota</a>
             </div>
             """, unsafe_allow_html=True)
+
+            if rota_key in st.session_state.interesses:
+                st.success("✔ Interesse já registrado")
+            else:
+                if st.button("✋ Tenho interesse nesta rota", key=f"btn_{rota_key}"):
+                    st.session_state.interesses.add(rota_key)
+                    st.markdown(f"[👉 Abrir formulário]({form_url})", unsafe_allow_html=True)
 
 # ================= RODAPÉ =================
 st.markdown("""
