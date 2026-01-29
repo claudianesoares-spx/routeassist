@@ -235,14 +235,25 @@ if st.session_state.consultado and st.session_state.id_motorista:
                         f"&entry.1534916252=Tenho+Interesse"
                     )
 
+                    # ===== ÍCONE CORRETO POR TIPO DE VEÍCULO =====
                     tipo = str(row["Tipo Veiculo"]).upper()
 
-if tipo == "PASSEIO":
-    icone = "🚗"
-elif tipo in ["UTILITARIO", "UTILITÁRIO", "VAN", "FIORINO"]:
-    icone = "🚚"
-else:
-    icone = "🏍️"
+                    if tipo == "PASSEIO":
+                        icone = "🚗"
+                    elif tipo in ["UTILITARIO", "UTILITÁRIO", "VAN", "FIORINO"]:
+                        icone = "🚚"
+                    else:
+                        icone = "🏍️"
+
+                    st.markdown(f"""
+                    <div class="card">
+                        <div class="flex-row">
+                            <span>📍 Bairro: {row['Bairro']}</span>
+                            <span>{icone} {row['Tipo Veiculo']}</span>
+                        </div>
+                        <p>📅 Data: {data_fmt}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
 
                     if rota_key in st.session_state.interesses:
                         st.success("✔ Interesse registrado. Não é necessário repetir.")
@@ -262,4 +273,3 @@ Concept & Development — Claudiane Vieira<br>
 Since Dec/2025
 </div>
 """, unsafe_allow_html=True)
-
